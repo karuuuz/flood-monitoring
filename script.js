@@ -1,10 +1,10 @@
 // ==========================================
-// DATA SIMULASI
+// DATA SENSOR DARI VERCEL / BLYNK
 // ==========================================
 
-let jarak = 12.5;
-let tinggiAir = 7.5;
-let statusAir = "NORMAL";
+let jarak = 0;
+let tinggiAir = 0;
+let statusAir = "MENUNGGU";
 let alarm = 0;
 
 
@@ -43,7 +43,6 @@ const lastUpdate =
 
 const ctx =
     document.getElementById("waterChart");
-
 
 const waterChart = new Chart(ctx, {
 
@@ -93,7 +92,7 @@ const waterChart = new Chart(ctx, {
 
 
 // ==========================================
-// UPDATE DASHBOARD
+// UPDATE TAMPILAN DASHBOARD
 // ==========================================
 
 function updateDashboard() {
@@ -192,123 +191,175 @@ function updateDashboard() {
 
 
     // ==============================
-    // WAKTU
+    // WAKTU UPDATE
     // ==============================
 
-    const now = new Date();
-
     lastUpdate.textContent =
-        now.toLocaleTimeString("id-ID");
+        new Date().toLocaleTimeString("id-ID");
 
 }
 
 
 // ==========================================
-// SIMULASI DATA SENSOR
+// AMBIL DATA DARI VERCEL
 // ==========================================
 
-function simulasiSensor() {
+async function ambilDataSensor() {
 
-    // membuat perubahan air secara random
+    try {
 
-    tinggiAir +=
-        (Math.random() - 0.5) * 2;
-
-
-    if (tinggiAir < 0) {
-        tinggiAir = 0;
-    }
-
-    if (tinggiAir > 20) {
-        tinggiAir = 20;
-    }
+        const response =
+            await fetch("/api/sensor", {
+                cache: "no-store"
+            });
 
 
-    // hitung jarak
+        // Cek HTTP response
 
-    jarak =
-        20 - tinggiAir;
+        if (!response.ok) {
 
+            throw new Error(
+                "HTTP Error " + response.status
+            );
 
-    // tentukan status
-
-    if (jarak <= 5) {
-
-        statusAir = "BAHAYA";
-
-        alarm = 1;
-
-    }
-
-    else if (jarak <= 10) {
-
-        statusAir = "WASPADA";
-
-        alarm = 1;
-
-    }
-
-    else {
-
-        statusAir = "NORMAL";
-
-        alarm = 0;
-
-    }
+        }
 
 
-    // update dashboard
+        // Ubah response menjadi JSON
 
-    updateDashboard();
+        const data =
+            await response.json();
 
 
-    // update grafik
+        // ==================================
+        // CEK DATA DARI BACKEND
+        // ==================================
 
-    const waktu =
-        new Date().toLocaleTimeString(
-            "id-ID",
-            {
-                minute: "2-digit",
-                second: "2-digit"
-            }
+        if (!data.berhasil) {
+
+            throw new Error(
+                data.error || "Data sensor gagal"
+            );
+
+        }
+
+
+        // ==================================
+        // MASUKKAN DATA BLYNK
+        // ==================================
+
+        jarak =
+            Number(data.jarak) || 0;
+
+        tinggiAir =
+            Number(data.tinggiAir) || 0;
+
+        statusAir =
+            data.status || "ERROR";
+
+        alarm =
+            Number(data.alarm) || 0;
+
+
+        // ==================================
+        // UPDATE DASHBOARD
+        // ==================================
+
+        updateDashboard();
+
+
+        // ==================================
+        // UPDATE GRAFIK
+        // ==================================
+
+        const waktu =
+            new Date().toLocaleTimeString(
+                "id-ID",
+                {
+                    minute: "2-digit",
+                    second: "2-digit"
+                }
+            );
+
+
+        waterChart.data.labels.push(waktu);
+
+        waterChart.data.datasets[0].data.push(
+            tinggiAir
         );
 
 
-    waterChart.data.labels.push(waktu);
+        // Maksimal 20 data
 
-    waterChart.data.datasets[0].data.push(
-        tinggiAir
-    );
+        if (
+            waterChart.data.labels.length > 20
+        ) {
+
+            waterChart.data.labels.shift();
+
+            waterChart.data.datasets[0].data.shift();
+
+        }
 
 
-    // maksimal 20 data
+        waterChart.update();
 
-    if (
-        waterChart.data.labels.length > 20
-    ) {
 
-        waterChart.data.labels.shift();
+        console.log(
+            "Data sensor:",
+            data
+        );
 
-        waterChart.data.datasets[0].data.shift();
+
+    } catch (error) {
+
+        console.error(
+            "Gagal mengambil data sensor:",
+            error
+        );
+
+
+        // Tampilkan kondisi error
+
+        statusAir = "ERROR";
+
+        alarm = 0;
+
+        statusIcon.textContent = "⚠️";
+
+        statusElement.textContent = "ERROR";
+
+        statusDescription.textContent =
+            "Tidak dapat terhubung ke server sensor";
+
+        statusCard.style.borderLeftColor =
+            "#64748b";
+
+        alarmElement.textContent =
+            "OFF";
+
+        lastUpdate.textContent =
+            "Koneksi gagal";
 
     }
-
-
-    waterChart.update();
 
 }
 
 
 // ==========================================
-// JALANKAN
+// JALANKAN DASHBOARD
 // ==========================================
 
-updateDashboard();
+// Ambil data pertama kali
+
+ambilDataSensor();
 
 
-// simulasi setiap 2 detik
+// ==========================================
+// UPDATE SETIAP 1 DETIK
+// ==========================================
 
 setInterval(
-    simulasiSensor,
-    2000
+    ambilDataSensor,
+    1000
 );
