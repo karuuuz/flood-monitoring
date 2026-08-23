@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     try {
         const token = process.env.BLYNK_AUTH_TOKEN;
 
@@ -15,7 +15,8 @@ export default async function handler(req, res) {
 
         if (!response.ok) {
             return res.status(response.status).json({
-                error: "Gagal mengambil data dari Blynk"
+                error: "Gagal mengambil data dari Blynk",
+                statusCode: response.status
             });
         }
 
@@ -36,4 +37,4 @@ export default async function handler(req, res) {
             detail: error.message
         });
     }
-}
+};
