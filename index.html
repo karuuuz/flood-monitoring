@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Flood Monitoring System</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <div>
+            <h1>🌊 Flood Monitoring</h1>
+            <p>IoT Early Warning System</p>
+        </div>
+
+        <div class="connection">
+            <span id="connectionDot"></span>
+            <span id="connectionText">Terhubung</span>
+        </div>
+    </header>
+
+
+    <main>
+
+        <!-- STATUS -->
+        <section class="status-card" id="statusCard">
+
+            <div class="status-icon" id="statusIcon">
+                🟢
+            </div>
+
+            <div>
+                <p class="label">STATUS AIR</p>
+                <h2 id="statusAir">NORMAL</h2>
+                <p id="statusDescription">
+                    Kondisi air masih aman
+                </p>
+            </div>
+
+        </section>
+
+
+        <!-- DATA SENSOR -->
+        <section class="sensor-grid">
+
+            <div class="card">
+
+                <div class="card-icon">
+                    📏
+                </div>
+
+                <div>
+                    <p>Jarak Sensor</p>
+                    <h2>
+                        <span id="jarak">12.5</span>
+                        <small>cm</small>
+                    </h2>
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-icon">
+                    💧
+                </div>
+
+                <div>
+                    <p>Tinggi Air</p>
+                    <h2>
+                        <span id="tinggiAir">7.5</span>
+                        <small>cm</small>
+                    </h2>
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-icon">
+                    🔔
+                </div>
+
+                <div>
+                    <p>Alarm</p>
+                    <h2 id="alarm">OFF</h2>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- GRAFIK -->
+        <section class="chart-card">
+
+            <div class="chart-header">
+
+                <div>
+                    <h2>Ketinggian Air</h2>
+                    <p>Monitoring secara real-time</p>
+                </div>
+
+                <div class="last-update">
+                    Update:
+                    <span id="lastUpdate">--:--:--</span>
+                </div>
+
+            </div>
+
+            <div class="chart-container">
+
+                <canvas id="waterChart"></canvas>
+
+            </div>
+
+        </section>
+
+
+        <!-- INFO -->
+        <section class="info-card">
+
+            <h2>Informasi Sistem</h2>
+
+            <div class="info-grid">
+
+                <div>
+                    <span>Perangkat</span>
+                    <strong>ESP32-C3</strong>
+                </div>
+
+                <div>
+                    <span>Sensor</span>
+                    <strong>HC-SR04</strong>
+                </div>
+
+                <div>
+                    <span>Tinggi Wadah</span>
+                    <strong>20 cm</strong>
+                </div>
+
+                <div>
+                    <span>Platform</span>
+                    <strong>Blynk IoT</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <footer>
+        <p>
+            © 2026 Flood Monitoring System
+        </p>
+    </footer>
+
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+
+</body>
+</html>
