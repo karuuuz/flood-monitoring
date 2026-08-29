@@ -1,12 +1,7 @@
 // ==========================================
-// DATA SENSOR DARI VERCEL / BLYNK
+// FLOODGUARD
+// WEBSITE MONITORING BANJIR
 // ==========================================
-
-let jarak = 0;
-let tinggiAir = 0;
-let statusAir = "MENUNGGU";
-let alarm = 0;
-
 
 // ==========================================
 // ELEMENT HTML
@@ -36,6 +31,15 @@ const alarmElement =
 const lastUpdate =
     document.getElementById("lastUpdate");
 
+const connectionDot =
+    document.getElementById("connectionDot");
+
+const connectionText =
+    document.getElementById("connectionText");
+
+const statusBadge =
+    document.getElementById("statusBadge");
+
 
 // ==========================================
 // GRAFIK
@@ -62,7 +66,9 @@ const waterChart = new Chart(ctx, {
 
             tension: 0.4,
 
-            fill: true
+            fill: true,
+
+            pointRadius: 3
 
         }]
 
@@ -74,13 +80,35 @@ const waterChart = new Chart(ctx, {
 
         maintainAspectRatio: false,
 
+        animation: false,
+
         scales: {
 
             y: {
 
                 beginAtZero: true,
 
-                max: 20
+                max: 20,
+
+                title: {
+
+                    display: true,
+
+                    text: "Tinggi Air (cm)"
+
+                }
+
+            },
+
+            x: {
+
+                title: {
+
+                    display: true,
+
+                    text: "Waktu"
+
+                }
 
             }
 
@@ -92,188 +120,255 @@ const waterChart = new Chart(ctx, {
 
 
 // ==========================================
-// UPDATE TAMPILAN DASHBOARD
+// STATUS KONEKSI
 // ==========================================
 
-function updateDashboard() {
+function setConnection(online) {
 
-    jarakElement.textContent =
-        jarak.toFixed(1);
+    if (connectionDot) {
 
-    tinggiAirElement.textContent =
-        tinggiAir.toFixed(1);
+        if (online) {
 
-    statusElement.textContent =
-        statusAir;
+            connectionDot.style.background =
+                "#4ade80";
 
+            connectionDot.style.boxShadow =
+                "0 0 14px rgba(74,222,128,.8)";
 
-    // ==============================
-    // NORMAL
-    // ==============================
+        } else {
 
-    if (statusAir === "NORMAL") {
+            connectionDot.style.background =
+                "#fb5b65";
 
-        statusIcon.textContent = "🟢";
+            connectionDot.style.boxShadow =
+                "0 0 14px rgba(251,91,101,.8)";
 
-        statusDescription.textContent =
-            "Kondisi air masih aman";
-
-        statusCard.style.borderLeftColor =
-            "#22c55e";
+        }
 
     }
 
 
-    // ==============================
-    // WASPADA
-    // ==============================
+    if (connectionText) {
 
-    else if (statusAir === "WASPADA") {
-
-        statusIcon.textContent = "🟡";
-
-        statusDescription.textContent =
-            "Ketinggian air mulai meningkat";
-
-        statusCard.style.borderLeftColor =
-            "#eab308";
+        connectionText.textContent =
+            online
+                ? "Terhubung"
+                : "Terputus";
 
     }
-
-
-    // ==============================
-    // BAHAYA
-    // ==============================
-
-    else if (statusAir === "BAHAYA") {
-
-        statusIcon.textContent = "🔴";
-
-        statusDescription.textContent =
-            "PERINGATAN! Ketinggian air berbahaya";
-
-        statusCard.style.borderLeftColor =
-            "#ef4444";
-
-    }
-
-
-    // ==============================
-    // ERROR
-    // ==============================
-
-    else {
-
-        statusIcon.textContent = "⚠️";
-
-        statusDescription.textContent =
-            "Sensor tidak dapat membaca data";
-
-        statusCard.style.borderLeftColor =
-            "#64748b";
-
-    }
-
-
-    // ==============================
-    // ALARM
-    // ==============================
-
-    if (alarm === 1) {
-
-        alarmElement.textContent = "ON";
-
-    } else {
-
-        alarmElement.textContent = "OFF";
-
-    }
-
-
-    // ==============================
-    // WAKTU UPDATE
-    // ==============================
-
-    lastUpdate.textContent =
-        new Date().toLocaleTimeString("id-ID");
 
 }
 
 
 // ==========================================
-// AMBIL DATA DARI VERCEL
+// STATUS AIR
 // ==========================================
 
-async function ambilDataSensor() {
+function updateStatus(status) {
 
-    try {
-
-        const response =
-            await fetch("/api/sensor", {
-                cache: "no-store"
-            });
+    status =
+        String(status || "ERROR")
+            .trim()
+            .toUpperCase();
 
 
-        // Cek HTTP response
-
-        if (!response.ok) {
-
-            throw new Error(
-                "HTTP Error " + response.status
-            );
-
-        }
+    statusElement.textContent =
+        status;
 
 
-        // Ubah response menjadi JSON
+    // ======================================
+    // NORMAL
+    // ======================================
 
-        const data =
-            await response.json();
+    if (status === "NORMAL") {
 
+        statusIcon.textContent =
+            "🟢";
 
-        // ==================================
-        // CEK DATA DARI BACKEND
-        // ==================================
+        statusDescription.textContent =
+            "Kondisi air masih aman";
 
-        if (!data.berhasil) {
+        statusCard.style.borderColor =
+            "rgba(74,222,128,.35)";
 
-            throw new Error(
-                data.error || "Data sensor gagal"
-            );
+        statusBadge.textContent =
+            "SYSTEM NORMAL";
 
-        }
+        statusBadge.style.color =
+            "#4ade80";
 
+        statusBadge.style.background =
+            "rgba(74,222,128,.12)";
 
-        // ==================================
-        // MASUKKAN DATA BLYNK
-        // ==================================
-
-        jarak =
-            Number(data.jarak) || 0;
-
-        tinggiAir =
-            Number(data.tinggiAir) || 0;
-
-        statusAir =
-            data.status || "ERROR";
-
-        alarm =
-            Number(data.alarm) || 0;
+    }
 
 
-        // ==================================
-        // UPDATE DASHBOARD
-        // ==================================
+    // ======================================
+    // WASPADA
+    // ======================================
 
-        updateDashboard();
+    else if (status === "WASPADA") {
+
+        statusIcon.textContent =
+            "🟡";
+
+        statusDescription.textContent =
+            "Ketinggian air mulai meningkat";
+
+        statusCard.style.borderColor =
+            "rgba(250,204,21,.45)";
+
+        statusBadge.textContent =
+            "PERLU WASPADA";
+
+        statusBadge.style.color =
+            "#facc15";
+
+        statusBadge.style.background =
+            "rgba(250,204,21,.12)";
+
+    }
 
 
-        // ==================================
-        // UPDATE GRAFIK
-        // ==================================
+    // ======================================
+    // BAHAYA
+    // ======================================
+
+    else if (status === "BAHAYA") {
+
+        statusIcon.textContent =
+            "🔴";
+
+        statusDescription.textContent =
+            "PERINGATAN! Ketinggian air berbahaya";
+
+        statusCard.style.borderColor =
+            "rgba(251,91,101,.55)";
+
+        statusBadge.textContent =
+            "BAHAYA";
+
+        statusBadge.style.color =
+            "#fb5b65";
+
+        statusBadge.style.background =
+            "rgba(251,91,101,.12)";
+
+    }
+
+
+    // ======================================
+    // ERROR
+    // ======================================
+
+    else {
+
+        statusIcon.textContent =
+            "⚠️";
+
+        statusDescription.textContent =
+            "Sensor tidak dapat membaca data";
+
+        statusCard.style.borderColor =
+            "rgba(148,163,184,.35)";
+
+        statusBadge.textContent =
+            "SENSOR ERROR";
+
+        statusBadge.style.color =
+            "#94a3b8";
+
+        statusBadge.style.background =
+            "rgba(148,163,184,.12)";
+
+    }
+
+}
+
+
+// ==========================================
+// UPDATE DASHBOARD
+// ==========================================
+
+function updateDashboard(
+
+    jarak,
+    tinggiAir,
+    statusAir,
+    alarm
+
+) {
+
+    // ======================================
+    // JARAK
+    // ======================================
+
+    if (Number.isFinite(Number(jarak))) {
+
+        jarakElement.textContent =
+            Number(jarak).toFixed(1);
+
+    } else {
+
+        jarakElement.textContent =
+            "--";
+
+    }
+
+
+    // ======================================
+    // TINGGI AIR
+    // ======================================
+
+    if (Number.isFinite(Number(tinggiAir))) {
+
+        tinggiAirElement.textContent =
+            Number(tinggiAir).toFixed(1);
+
+    } else {
+
+        tinggiAirElement.textContent =
+            "--";
+
+    }
+
+
+    // ======================================
+    // STATUS
+    // ======================================
+
+    updateStatus(statusAir);
+
+
+    // ======================================
+    // ALARM
+    // ======================================
+
+    alarmElement.textContent =
+        Number(alarm) === 1
+            ? "ON"
+            : "OFF";
+
+
+    // ======================================
+    // WAKTU
+    // ======================================
+
+    const now =
+        new Date();
+
+    lastUpdate.textContent =
+        now.toLocaleTimeString("id-ID");
+
+
+    // ======================================
+    // GRAFIK
+    // ======================================
+
+    if (Number.isFinite(Number(tinggiAir))) {
 
         const waktu =
-            new Date().toLocaleTimeString(
+            now.toLocaleTimeString(
                 "id-ID",
                 {
                     minute: "2-digit",
@@ -282,17 +377,20 @@ async function ambilDataSensor() {
             );
 
 
-        waterChart.data.labels.push(waktu);
-
-        waterChart.data.datasets[0].data.push(
-            tinggiAir
+        waterChart.data.labels.push(
+            waktu
         );
 
 
-        // Maksimal 20 data
+        waterChart.data.datasets[0].data.push(
+            Number(tinggiAir)
+        );
+
+
+        // Maksimal 30 data
 
         if (
-            waterChart.data.labels.length > 20
+            waterChart.data.labels.length > 30
         ) {
 
             waterChart.data.labels.shift();
@@ -304,42 +402,97 @@ async function ambilDataSensor() {
 
         waterChart.update();
 
+    }
 
-        console.log(
-            "Data sensor:",
-            data
+}
+
+
+// ==========================================
+// AMBIL DATA DARI API VERCEL
+// ==========================================
+
+async function loadBlynkData() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/blynk",
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `API Error: ${response.status}`
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        // ==================================
+        // CEK HASIL API
+        // ==================================
+
+        if (!data.berhasil) {
+
+            throw new Error(
+                data.error ||
+                "API gagal mengambil data"
+            );
+
+        }
+
+
+        // ==================================
+        // UPDATE WEBSITE
+        // ==================================
+
+        updateDashboard(
+
+            data.jarak,
+
+            data.tinggiAir,
+
+            data.status,
+
+            data.alarm
+
         );
 
 
-    } catch (error) {
+        // ==================================
+        // KONEKSI BERHASIL
+        // ==================================
+
+        setConnection(true);
+
+
+        console.log(
+            "Data Blynk:",
+            data
+        );
+
+    }
+
+
+    catch (error) {
 
         console.error(
-            "Gagal mengambil data sensor:",
+            "Gagal mengambil data:",
             error
         );
 
 
-        // Tampilkan kondisi error
-
-        statusAir = "ERROR";
-
-        alarm = 0;
-
-        statusIcon.textContent = "⚠️";
-
-        statusElement.textContent = "ERROR";
-
-        statusDescription.textContent =
-            "Tidak dapat terhubung ke server sensor";
-
-        statusCard.style.borderLeftColor =
-            "#64748b";
-
-        alarmElement.textContent =
-            "OFF";
-
-        lastUpdate.textContent =
-            "Koneksi gagal";
+        setConnection(false);
 
     }
 
@@ -347,19 +500,29 @@ async function ambilDataSensor() {
 
 
 // ==========================================
-// JALANKAN DASHBOARD
+// STATUS AWAL
 // ==========================================
 
-// Ambil data pertama kali
+updateStatus("NORMAL");
 
-ambilDataSensor();
+setConnection(false);
 
 
 // ==========================================
-// UPDATE SETIAP 1 DETIK
+// DATA PERTAMA
+// ==========================================
+
+loadBlynkData();
+
+
+// ==========================================
+// UPDATE SETIAP 2 DETIK
 // ==========================================
 
 setInterval(
-    ambilDataSensor,
-    1000
+
+    loadBlynkData,
+
+    2000
+
 );
